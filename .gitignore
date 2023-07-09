@@ -1,0 +1,18 @@
+# vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# modules
+node_modules
+
+# local
+*.env
+dist
+
+# package manager
+package-lock.json
+yarn-error.log
+yarn.lock
