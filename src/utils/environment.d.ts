@@ -10,7 +10,8 @@ declare global {
 
       NODE_ENV: 'prod' | 'dev';
       SERVER_PORT: number;
-      JWT_SECRET: string;
+      JWT_REFRESH_SECRET: string;
+      JWT_ACCESS_SECRET: string;
 
       RELAY_HOST: string;
       RELAY_PORT: number;

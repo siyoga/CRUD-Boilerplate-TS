@@ -9,7 +9,7 @@
 node_modules
 
 # local
-*.env
+*.env*
 dist
 
 # package manager

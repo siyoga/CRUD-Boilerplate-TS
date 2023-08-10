@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RefreshToken } from './repositories/refreshToken.repository';
-import { User } from './repositories/user.repository';
+import { User } from './repositories/users.repository';
 import { UserService } from './services/user.service';
-import { RefreshTokenService } from './services/refreshToken.service';
+import { RefreshToken } from './repositories/rt.repository';
+import { RefreshTokenService } from './services/rt.service';
+
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -13,16 +14,13 @@ import { RefreshTokenService } from './services/refreshToken.service';
         port: process.env.POSTGRES_PORT,
         username: process.env.POSTGRES_USER,
         password: process.env.POSTGRES_PASSWORD,
-        database:
-          process.env.NODE_ENV === 'dev'
-            ? process.env.POSTGRES_DB_TEST
-            : process.env.POSTGRES_DB,
+        database: process.env.POSTGRES_DB,
         logging: process.env.NODE_ENV === 'dev',
         synchronize: true,
-        entities: [RefreshToken, User],
+        entities: [User, RefreshToken],
       }),
     }),
-    TypeOrmModule.forFeature([RefreshToken, User]),
+    TypeOrmModule.forFeature([User, RefreshToken]),
   ],
   providers: [UserService, RefreshTokenService],
   exports: [UserService, RefreshTokenService],

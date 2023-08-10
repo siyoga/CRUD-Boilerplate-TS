@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { AppModule } from 'app.module';
 
 import * as dotenv from 'dotenv';
 
@@ -10,7 +10,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('/api');
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:8080',
     credentials: true,
   });
 

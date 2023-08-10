@@ -1,31 +1,45 @@
-FROM node:18.12-alpine AS dev
+# LOCAL BUILD
 
-ARG NODE_ENV=dev
-ENV NODE_ENV=${NODE_ENV}
+FROM node:18-alpine AS dev
 
-WORKDIR /usr/app
+WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 
-RUN npm install glob rimraf
+RUN rm -rf ./node_modules && yarn install
 
-RUN npm install --omit=dev
+COPY --chown=node:node . .
 
-COPY . .
+# USER node
 
-FROM node:18.12-alpine AS prod
+CMD yarn start:dev
 
-ARG NODE_ENV=prod
-ENV NODE_ENV=${NODE_ENV}
+# PRODUCTION BUILD
 
-WORKDIR /usr/app
+FROM node:18-alpine AS build
 
-COPY package*.json ./
+WORKDIR /usr/src/app
 
-RUN npm ci
+COPY --chown=node:node package*.json ./
 
-COPY . .
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+
+COPY --chown=node:node . .
+
+RUN yarn build
+
+ENV NODE_ENV prod
+
+RUN rm -rf ./node_modules yarn install --production
+
+USER node
 
 
-RUN npm run build
-CMD [ "npm", "run", "start:prod" ]
+# PRODUCTION
+
+FROM node:18-alpine AS prod
+
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main.js"]

@@ -1,54 +1,43 @@
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
   Post,
-  Query,
   Request,
+  Headers,
   UseGuards,
+  Body,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { NewUserDTO } from '../../dto/user.dto';
-import { AuthLogic } from './auth.logic';
-import { TokenPairDTO } from '../../dto/token.dto';
-import { LocalAuthGuard } from './guard/localAuth.guard';
-import { UserPublicData } from 'utils/types/UserDataData';
-
-interface IRefresh {
-  refreshToken: string;
-}
+import { AuthLogic } from './auth.service';
+import { Tokens } from 'utils/types/Tokens';
+import { UserPublic } from 'utils/types/User';
+import { RefreshTokenGuard } from './guard/rt.guard';
+import { NewRequest } from 'utils/types/Request';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authLogic: AuthLogic) {}
 
-  @Post('/register')
-  @HttpCode(201)
-  async register(@Body() newUserDTO: NewUserDTO): Promise<void> {
-    await this.authLogic.register(newUserDTO);
-    return;
-  }
-
-  @UseGuards(LocalAuthGuard)
   @Post('/login')
   @HttpCode(200)
-  async login(@Request() req: { user: UserPublicData }): Promise<TokenPairDTO> {
-    return await this.authLogic.login(req.user.id);
+  async login(@Body() userPublic: UserPublic): Promise<Tokens> {
+    return await this.authLogic.login(userPublic);
   }
 
-  @Post('/refresh')
-  @HttpCode(200)
-  async refresh(@Body() req: IRefresh): Promise<TokenPairDTO> {
-    return await this.authLogic.refresh(req.refreshToken);
+  @Get('/register/google')
+  @HttpCode(201)
+  async registerViaGoogle(
+    @Headers('Authorization') authHeader: string,
+  ): Promise<UserPublic> {
+    return await this.authLogic.registerViaGoogle(authHeader);
   }
 
-  @Get('/confirm')
+  @UseGuards(RefreshTokenGuard)
+  @Get('/refresh')
   @HttpCode(200)
-  async confirm(@Query('token') token: string): Promise<void> {
-    console.log(token);
-    await this.authLogic.confirm(token);
-    return;
+  async refresh(@Request() req: NewRequest): Promise<Tokens> {
+    return await this.authLogic.refreshTokens(req.userId, req.refreshToken);
   }
 }
