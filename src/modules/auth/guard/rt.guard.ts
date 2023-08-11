@@ -17,10 +17,10 @@ export class RefreshTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
-    const token = this.extractAccessTokenFromHeader(req);
+    const token = this.extractTokenFromHeader(req);
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid token type.');
     }
 
     try {
@@ -30,13 +30,13 @@ export class RefreshTokenGuard implements CanActivate {
       req['userId'] = payload;
       req['refreshToken'] = token;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid token signature.');
     }
 
     return true;
   }
 
-  private extractAccessTokenFromHeader(req: Request): string | undefined {
+  private extractTokenFromHeader(req: Request): string | undefined {
     const [type, token] = req.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }

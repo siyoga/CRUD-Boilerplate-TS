@@ -83,6 +83,26 @@ export class AuthLogic {
     return { email: newUser.email, username: newUser.username };
   }
 
+  async whoAmI(
+    authHeader: string,
+  ): Promise<Omit<User, 'password' | 'hashedRt'>> {
+    const [type, token] = authHeader.split(' ');
+
+    if (type !== 'Bearer') {
+      throw new BadRequestException('Invalid token type.');
+    }
+
+    const user = this.readAccessToken(token);
+
+    if (!user) {
+      throw new UnauthorizedException('Token is invalid or expired.');
+    }
+
+    delete user.password;
+
+    return user;
+  }
+
   async refreshTokens(userId: string, rt: string): Promise<Tokens> {
     const user = await this.userService.findOneById(userId);
 
@@ -118,12 +138,26 @@ export class AuthLogic {
     return false;
   }
 
+  private readAccessToken(accessToken: string): User | false {
+    try {
+      const decodedAccessToken = this.JwtService.verify<User>(accessToken, {
+        secret: this.accessTokenJwtSecret,
+      });
+
+      return decodedAccessToken;
+    } catch {
+      return false;
+    }
+  }
+
   private async generateTokenPair(user: User): Promise<Tokens> {
+    const date = new Date(Date.now());
+
     const tokens: Tokens = {
       accessToken: this.JwtService.sign(
         { ...user },
         {
-          expiresIn: '5m',
+          expiresIn: '15m',
           secret: this.accessTokenJwtSecret,
         },
       ),
@@ -134,6 +168,8 @@ export class AuthLogic {
           secret: this.refreshTokenJwtSecret,
         },
       ),
+      iat: date.getTime(),
+      exp: new Date(date.setMinutes(date.getMinutes() + 15)).getTime(),
     };
 
     if (!user.refreshToken) {

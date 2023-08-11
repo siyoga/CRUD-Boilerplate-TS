@@ -14,6 +14,7 @@ import { Tokens } from 'utils/types/Tokens';
 import { UserPublic } from 'utils/types/User';
 import { RefreshTokenGuard } from './guard/rt.guard';
 import { NewRequest } from 'utils/types/Request';
+import { User } from 'modules/database/repositories/users.repository';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -32,6 +33,14 @@ export class AuthController {
     @Headers('Authorization') authHeader: string,
   ): Promise<UserPublic> {
     return await this.authLogic.registerViaGoogle(authHeader);
+  }
+
+  @Get('/whoAmI')
+  @HttpCode(200)
+  async whoAmI(
+    @Headers('Authorization') authHeader: string,
+  ): Promise<Omit<User, 'password' | 'hashedRt'>> {
+    return await this.authLogic.whoAmI(authHeader);
   }
 
   @UseGuards(RefreshTokenGuard)
